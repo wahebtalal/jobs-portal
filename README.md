@@ -51,9 +51,15 @@ npm run build
 ```
 
 ## Docker
+If port `3000` is already used on your host, change `HOST_PORT` in `.env` (example: `HOST_PORT=3100`).
+
 ```bash
 docker compose up --build -d
 ```
+
+Then open:
+- `http://localhost:${HOST_PORT:-3000}/jobs`
+- `http://localhost:${HOST_PORT:-3000}/admin`
 
 The container auto-runs `prisma db push` before app start.
 
