@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  nameEn    String
+  nameAr    String
+  jobs      Job[]
+  createdAt DateTime @default(now())
+}
+
+model Location {
+  id        Int      @id @default(autoincrement())
+  nameEn    String
+  nameAr    String
+  jobs      Job[]
+  createdAt DateTime @default(now())
+}
+
+model Job {
+  id               Int      @id @default(autoincrement())
+  slug             String   @unique
+  titleEn          String
+  titleAr          String
+  companyEn        String
+  companyAr        String
+  summaryEn        String
+  summaryAr        String
+  descriptionEn    String
+  descriptionAr    String
+  applyUrl         String
+  published        Boolean  @default(true)
+  publishedAt      DateTime @default(now())
+  categoryId       Int
+  locationId       Int
+  jobType          String
+  category         Category @relation(fields: [categoryId], references: [id])
+  location         Location @relation(fields: [locationId], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
