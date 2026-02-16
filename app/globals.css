@@ -3,11 +3,34 @@
 @tailwind utilities;
 
 :root { color-scheme: light; }
-body { @apply bg-slate-50 text-slate-800; }
+
+body {
+  @apply bg-slate-50 text-slate-800;
+  background-image: radial-gradient(circle at 10% -10%, #dbeafe 0, transparent 35%), radial-gradient(circle at 100% 0%, #e0e7ff 0, transparent 30%);
+}
+
 .container-page { @apply max-w-6xl mx-auto px-4; }
-.card { @apply bg-white border border-slate-200 rounded-xl shadow-sm; }
-.input { @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500; }
-.btn { @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition; }
+
+.card { @apply bg-white border border-slate-200 rounded-2xl shadow-sm; }
+
+.input {
+  @apply w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+.btn { @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium transition; }
 .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700; }
 .btn-secondary { @apply bg-white border border-slate-300 hover:bg-slate-50; }
+
 .badge { @apply inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700; }
+
+.hero {
+  @apply rounded-3xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 text-white shadow-lg;
+}
+
+.job-card {
+  @apply card p-5 hover:shadow-md transition-all hover:-translate-y-0.5;
+}
+
+.muted { @apply text-slate-600; }
+
+.section-title { @apply text-2xl md:text-3xl font-bold tracking-tight; }
