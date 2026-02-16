@@ -3,13 +3,10 @@ import { prisma } from '@/lib/prisma';
 import { listJobs } from '@/lib/queries';
 import { JobCard } from '@/components/JobCard';
 import { getLangFromSearchParam, t } from '@/lib/i18n';
-import { cookies } from 'next/headers';
 
 export default async function JobsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
   const lang = getLangFromSearchParam(sp.lang);
-  const cookieStore = await cookies();
-  cookieStore.set('lang', lang, { path: '/', maxAge: 60 * 60 * 24 * 365 });
   const page = Number(sp.page || '1');
   const data = await listJobs({
     search: sp.q,
