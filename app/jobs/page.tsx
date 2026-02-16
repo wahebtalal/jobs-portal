@@ -1,8 +1,25 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { listJobs } from '@/lib/queries';
-import { JobCard } from '@/components/JobCard';
 import { getLangFromSearchParam, t } from '@/lib/i18n';
+
+function formatDate(value: Date | string, lang: 'ar' | 'en') {
+  const d = new Date(value);
+  return new Intl.DateTimeFormat(lang === 'ar' ? 'ar-YE' : 'en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(d);
+}
+
+function initials(name: string) {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join('');
+}
 
 export default async function JobsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
@@ -29,68 +46,106 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
   };
 
   return (
-    <main className="container-page py-8 space-y-6">
-      <section className="hero p-6 md:p-8">
-        <p className="text-sm/6 text-blue-100">{t(lang, 'Professional Jobs Platform', 'منصة وظائف احترافية')}</p>
-        <h1 className="section-title mt-1">{t(lang, 'Discover Top Jobs in Yemen', 'اكتشف أفضل الوظائف في اليمن')}</h1>
-        <p className="mt-3 text-blue-100 max-w-2xl">
-          {t(lang, 'Search thousands of opportunities by category, location, and job type.', 'ابحث في آلاف الفرص حسب المجال، المدينة، ونوع الوظيفة.')}
-        </p>
-      </section>
+    <main className="container-page py-6 space-y-4">
+      <section className="card p-4 md:p-5">
+        <div className="flex flex-wrap items-center gap-4 text-sm">
+          <span className="font-semibold text-amber-600">{data.count} {t(lang, 'Job Active', 'وظيفة متاحة')}</span>
+          <span className="text-slate-500">{categories.length} {t(lang, 'Categories', 'فئات')}</span>
+          <span className="text-slate-500">{locations.length} {t(lang, 'Cities', 'مدن')}</span>
+        </div>
 
-      <section className="card p-4 md:p-6">
-        <form className="grid md:grid-cols-5 gap-3" method="GET" action="/jobs">
+        <form className="mt-4 grid md:grid-cols-5 gap-2" method="GET" action="/jobs">
           <input type="hidden" name="lang" value={lang} />
-
           <input
             name="q"
             defaultValue={sp.q}
-            placeholder={t(lang, 'Search jobs, companies, skills...', 'ابحث عن وظيفة، شركة، مهارة...')}
+            placeholder={t(lang, 'Search title or organization', 'ابحث بعنوان الوظيفة أو الجهة')}
             className="input md:col-span-2"
           />
-
           <select name="category" defaultValue={sp.category} className="input">
-            <option value="">{t(lang, 'All categories', 'كل الأقسام')}</option>
+            <option value="">{t(lang, 'Category', 'الفئة')}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{t(lang, c.nameEn, c.nameAr)}</option>
             ))}
           </select>
-
           <select name="location" defaultValue={sp.location} className="input">
-            <option value="">{t(lang, 'All locations', 'كل المدن')}</option>
+            <option value="">{t(lang, 'Location', 'الموقع')}</option>
             {locations.map((l) => (
               <option key={l.id} value={l.id}>{t(lang, l.nameEn, l.nameAr)}</option>
             ))}
           </select>
-
           <select name="type" defaultValue={sp.type} className="input">
-            <option value="">{t(lang, 'All job types', 'كل أنواع الوظائف')}</option>
+            <option value="">{t(lang, 'Type', 'النوع')}</option>
             {['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP', 'REMOTE'].map((v) => (
               <option key={v} value={v}>{v.replace('_', ' ')}</option>
             ))}
           </select>
-
-          <button className="btn btn-primary md:col-span-5">{t(lang, 'Search Jobs', 'بحث الوظائف')}</button>
+          <button className="btn btn-primary md:col-span-5">{t(lang, 'Search', 'بحث')}</button>
         </form>
+
+        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
+          {categories.slice(0, 8).map((c) => (
+            <div key={c.id} className="badge justify-start">
+              {t(lang, c.nameEn, c.nameAr)}
+            </div>
+          ))}
+        </div>
       </section>
 
-      <section className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">{t(lang, 'Latest Opportunities', 'أحدث الفرص')}</h2>
-        <p className="text-sm muted">{data.count} {t(lang, 'jobs found', 'وظيفة متاحة')}</p>
+      <section className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[920px] text-sm">
+            <thead className="bg-slate-100 text-slate-600">
+              <tr>
+                <th className="px-3 py-3 text-start">{t(lang, 'Posted', 'تاريخ النشر')}</th>
+                <th className="px-3 py-3 text-start">{t(lang, 'Organization', 'الجهة')}</th>
+                <th className="px-3 py-3 text-start">{t(lang, 'Title', 'المسمى')}</th>
+                <th className="px-3 py-3 text-start">{t(lang, 'Location', 'الموقع')}</th>
+                <th className="px-3 py-3 text-start">{t(lang, 'Deadline', 'آخر موعد')}</th>
+                <th className="px-3 py-3 text-start">{t(lang, 'Apply', 'التقديم')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.jobs.map((job) => {
+                const posted = formatDate(job.publishedAt || job.createdAt, lang);
+                const deadline = formatDate(new Date(new Date(job.publishedAt || job.createdAt).getTime() + 1000 * 60 * 60 * 24 * 30), lang);
+                const companyName = t(lang, job.companyEn, job.companyAr);
+                const title = t(lang, job.titleEn, job.titleAr);
+                const location = t(lang, job.location.nameEn, job.location.nameAr);
+
+                return (
+                  <tr key={job.id} className="border-t border-slate-100 hover:bg-slate-50/70">
+                    <td className="px-3 py-3 whitespace-nowrap text-slate-500">{posted}</td>
+                    <td className="px-3 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-full bg-slate-200 text-slate-700 text-xs font-semibold grid place-items-center">
+                          {initials(companyName)}
+                        </div>
+                        <span className="text-slate-700">{companyName}</span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 font-medium text-slate-900">
+                      <Link href={`/jobs/${job.slug}`} className="hover:text-blue-700">{title}</Link>
+                    </td>
+                    <td className="px-3 py-3 text-slate-600">{location}</td>
+                    <td className="px-3 py-3 text-rose-500 whitespace-nowrap">{deadline}</td>
+                    <td className="px-3 py-3">
+                      <a href={job.applyUrl} target="_blank" className="text-blue-700 hover:text-blue-800 font-medium">
+                        {t(lang, 'Apply', 'قدّم')}
+                      </a>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </section>
 
-      <section className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {data.jobs.map((job) => <JobCard key={job.id} job={job} lang={lang} />)}
-      </section>
-
-      <div className="flex items-center justify-between pt-2">
-        <Link href={mkUrl(Math.max(1, data.page - 1))} className="btn btn-secondary">
-          {t(lang, 'Previous', 'السابق')}
-        </Link>
-        <span className="px-2 py-2 text-sm muted">{data.page}/{data.totalPages}</span>
-        <Link href={mkUrl(Math.min(data.totalPages, data.page + 1))} className="btn btn-secondary">
-          {t(lang, 'Next', 'التالي')}
-        </Link>
+      <div className="flex items-center justify-between">
+        <Link href={mkUrl(Math.max(1, data.page - 1))} className="btn btn-secondary">{t(lang, 'Prev', 'السابق')}</Link>
+        <span className="text-sm muted">{t(lang, 'Page', 'صفحة')} {data.page}/{data.totalPages}</span>
+        <Link href={mkUrl(Math.min(data.totalPages, data.page + 1))} className="btn btn-secondary">{t(lang, 'Next', 'التالي')}</Link>
       </div>
     </main>
   );
